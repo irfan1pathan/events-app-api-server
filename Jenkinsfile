@@ -4,13 +4,13 @@
 // variables:
 //      https://github.com/irfan1pathan/events-app-api-server.git
 //      Main
-//      demo-api
-//      gcr.io/dtcaugust2021-215/api-server-image:v1.0.0
+//      dtcaugust2021-215
+//      api-server-image
 //      cluster-train 
 //      us-central1-c
 //      the following values can be found in the yaml:
 //      demo-api
-//      demo-api (in the template/spec section of the deployment)
+//      demo-ui (in the template/spec section of the deployment)
 
 pipeline {
     agent any 
@@ -29,7 +29,7 @@ pipeline {
                 echo 'workspace and versions' 
                 sh 'echo $WORKSPACE'
                 sh 'gcloud version'
-                sh 'node -v'
+                sh 'nodejs -v'
                 sh 'npm -v'
         
             }
@@ -37,6 +37,7 @@ pipeline {
          stage('Stage 3') {
             environment {
                 PORT = 8081
+                Testing =true
             }
             steps {
                 echo 'install dependencies' 
@@ -50,16 +51,16 @@ pipeline {
             steps {
                 echo "build id = ${env.BUILD_ID}"
                 echo 'Tests passed on to build Docker container'
-                sh "gcloud builds submit -t gcr.io/demo-api/gcr.io/dtcaugust2021-215/api-server-image:v1.0.0:v2.${env.BUILD_ID} ."
+                sh "gcloud builds submit -t gcr.io/dtcaugust2021-215/api-server-image:v2.${env.BUILD_ID} ."
             }
         }        
          stage('Stage 5') {
             steps {
                 echo 'Get cluster credentials'
-                sh 'gcloud container clusters get-credentials cluster-train --zone us-central1-c --project demo-api'
+                sh 'gcloud container clusters get-credentials cluster-train --zone us-central1-c --project dtcaugust2021-215'
                 echo 'Update the image'
-                echo "gcr.io/demo-api/gcr.io/dtcaugust2021-215/api-server-image:v1.0.0:2.${env.BUILD_ID}"
-                sh "kubectl set image deployment/demo-api [CONTAINER_NAME]=gcr.io/demo-api/gcr.io/dtcaugust2021-215/api-server-image:v1.0.0:v2.${env.BUILD_ID} --record"
+                echo "gcr.io/dtcaugust2021-215/api-server-image:2.${env.BUILD_ID}"
+                sh "kubectl set image deployment/demo-api demo-ui=gcr.io/dtcaugust2021-215/api-server-image:v2.${env.BUILD_ID} --record"
             }
         }
     }
